@@ -1,0 +1,21 @@
+sudo: required
+
+services:
+  - docker
+
+before_install:
+  - docker image build -t azsuth/client -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker container run azsuth/client npm run test -- --coverage
+
+after_success:
+  - docker image build -t azsuth/multi-client ./client
+  - docker image build -t azsuth/multi-nginx ./nginx
+  - docker image build -t azsuth/multi-server ./server
+  - docker image build -t azsuth/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push azsuth/multi-client
+  - docker push azsuth/multi-nginx
+  - docker push azsuth/multi-server
+  - docker push azsuth/multi-worker
